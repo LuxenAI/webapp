@@ -63,18 +63,37 @@ def logout():
 def dashboard():
     if 'user_id' not in session:
         return redirect('/login')
+
     if request.method == 'POST':
-        file = request.files['scan']
-        if file:
-            filename = file.filename
-            path = os.path.join('static', filename)
-            file.save(path)
-            with sqlite3.connect('luxen.db') as conn:
-                conn.execute('INSERT INTO scans (user_id, filename, result) VALUES (?, ?, ?)',
-                             (session['user_id'], filename, "Pending Analysis"))
+        if 'scan' in request.files:
+            file = request.files['scan']
+            if file.filename:
+                filename = file.filename
+                path = os.path.join('static', filename)
+                file.save(path)
+                with sqlite3.connect('luxen.db') as conn:
+                    conn.execute('INSERT INTO scans (user_id, filename, result) VALUES (?, ?, ?)',
+                                 (session['user_id'], filename, "Pending Analysis"))
+
+        elif 'camera_capture' in request.form:
+            import base64
+            import uuid
+            data_url = request.form['camera_capture']
+            if data_url:
+                header, encoded = data_url.split(",", 1)
+                image_data = base64.b64decode(encoded)
+                filename = f"camera_{uuid.uuid4().hex}.png"
+                path = os.path.join('static', filename)
+                with open(path, "wb") as f:
+                    f.write(image_data)
+                with sqlite3.connect('luxen.db') as conn:
+                    conn.execute('INSERT INTO scans (user_id, filename, result) VALUES (?, ?, ?)',
+                                 (session['user_id'], filename, "Captured Photo"))
+
     with sqlite3.connect('luxen.db') as conn:
         scans = conn.execute('SELECT * FROM scans WHERE user_id = ?', (session['user_id'],)).fetchall()
     return render_template('dashboard.html', scans=scans)
+
 
 @app.route('/delete_scan', methods=['POST'])
 def delete_scan():

@@ -1,10 +1,47 @@
 {% extends "layout.html" %}
 {% block content %}
 <h2>Your Scans</h2>
+
+<!-- Upload a file manually -->
 <form method="POST" enctype="multipart/form-data">
     <input type="file" name="scan" required>
     <button type="submit">Upload</button>
 </form>
+
+<!-- In-browser camera -->
+<h3>Use Your Camera</h3>
+<video id="video" width="320" height="240" autoplay></video>
+<canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+<br>
+<button id="snap">Capture</button>
+<form id="photoForm" method="POST" enctype="multipart/form-data" style="display:inline;">
+    <input type="hidden" name="camera_capture" id="cameraCapture">
+    <button type="submit">Submit Photo</button>
+</form>
+
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const snap = document.getElementById('snap');
+    const cameraCapture = document.getElementById('cameraCapture');
+    const context = canvas.getContext('2d');
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+            video.srcObject = stream;
+        });
+
+    snap.addEventListener("click", function () {
+        canvas.style.display = 'block';
+        context.drawImage(video, 0, 0, 320, 240);
+        const dataURL = canvas.toDataURL('image/png');
+        cameraCapture.value = dataURL;
+    });
+</script>
+
+<hr>
+
+<!-- Show uploaded scans -->
 <ul>
     {% for scan in scans %}
     <li>
