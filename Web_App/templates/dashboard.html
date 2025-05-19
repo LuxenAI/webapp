@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>Your Scans</h2>
+<form method="POST" enctype="multipart/form-data">
+    <input type="file" name="scan" required>
+    <button type="submit">Upload</button>
+</form>
+<ul>
+    {% for scan in scans %}
+    <li>
+        {{ scan[2] }} - {{ scan[3] }}
+        <a href="/report/{{ scan[0] }}">View</a>
+        <form method="POST" action="/delete_scan" style="display:inline;">
+            <input type="hidden" name="scan_id" value="{{ scan[0] }}">
+            <button type="submit">Delete</button>
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}
